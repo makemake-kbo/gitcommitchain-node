@@ -54,6 +54,24 @@ impl Transaction {
 }
 
 #[derive(Debug)]
+struct Mempool {
+	transactions: Vec<Transaction>,
+}
+
+impl Mempool {
+	pub fn new(transactions: Vec<Transaction>) -> Self {
+		Self { transactions }
+	}
+
+	pub fn default() -> Self {
+		Self {
+			transactions: Vec::new(),
+		}
+	}
+}
+
+
+#[derive(Debug)]
 pub struct Block {
 	pub hash: [u8; 32],
 	pub nonce: u64,
@@ -65,12 +83,14 @@ pub struct Block {
 impl Block {
 	pub fn new(
 		hash: [u8; 32],
+		nonce: u64,
 		previous_hash: [u8; 32],
 		coinbase: Address,
 		transactions: Vec<Transaction>,
 	) -> Self {
 		Self {
 			hash,
+			nonce,
 			previous_hash,
 			coinbase,
 			transactions,
@@ -80,6 +100,7 @@ impl Block {
 	pub fn default () -> Self {
 		Self {
 			hash: [0; 32],
+			nonce: 0,
 			previous_hash: [0; 32],
 			coinbase: address!("0000000000000000000000000000000000000000"),
 			transactions: Vec::new(),
