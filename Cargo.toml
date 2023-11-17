@@ -9,3 +9,4 @@ edition = "2021"
 alloy-primitives = "0.4.2"
 git2 = "0.18.1"
 serde = { version = "1.0.192", features = ["derive"] }
+sled = "0.34.7"
