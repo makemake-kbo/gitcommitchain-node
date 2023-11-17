@@ -56,6 +56,7 @@ impl Transaction {
 #[derive(Debug)]
 pub struct Block {
 	pub hash: [u8; 32],
+	pub nonce: u64,
 	pub previous_hash: [u8; 32],
 	pub coinbase: Address,
 	pub transactions: Vec<Transaction>,
