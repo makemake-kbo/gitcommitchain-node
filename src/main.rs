@@ -1,4 +1,5 @@
 mod types;
+mod mine;
 
 use sled::{
     open,

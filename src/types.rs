@@ -1,10 +1,14 @@
 use alloy_primitives::{
 	address,
 	Address,
-	U256,
+	U256, FixedBytes,
+};
+use serde::{
+	Serialize,
+	Deserialize,
 };
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Transaction {
 	pub origin: Address,
 	pub to: Address,
@@ -13,7 +17,7 @@ pub struct Transaction {
 	pub max_basefee: U256,
 	pub max_priority: U256,
 	pub calldata: Vec<u8>,
-	pub signature: [u8; 65],
+	pub signature: FixedBytes<65>,
 }
 
 impl Transaction {
@@ -25,7 +29,7 @@ impl Transaction {
 		max_basefee: U256,
 		max_priority: U256,
 		calldata: Vec<u8>,
-		signature: [u8; 65],
+		signature: FixedBytes<65>,
 	) -> Self {
 		Self {
 			origin,
@@ -48,14 +52,14 @@ impl Transaction {
 			max_basefee: U256::from(0),
 			max_priority: U256::from(0),
 			calldata: Vec::new(),
-			signature: [0; 65],
+			signature: "0x1234567890".parse::<FixedBytes<65>>().unwrap(),
 		}
 	}
 }
 
-#[derive(Debug)]
-struct Mempool {
-	transactions: Vec<Transaction>,
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Mempool {
+	pub transactions: Vec<Transaction>,
 }
 
 impl Mempool {
@@ -70,8 +74,14 @@ impl Mempool {
 	}
 }
 
+impl From<Mempool> for Vec<Transaction> {
+	fn from(mempool: Mempool) -> Self {
+		mempool.transactions
+	}
+}
 
-#[derive(Debug)]
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Block {
 	pub hash: [u8; 32],
 	pub nonce: u64,
