@@ -1,3 +1,8 @@
+use std::sync::Arc;
+use http_body_util::BodyExt;
+use hyper::body::Incoming;
+use std::str::from_utf8;
+use tokio::sync::broadcast;
 use std::convert::Infallible;
 use http_body_util::Full;
 use hyper::{
@@ -5,10 +10,20 @@ use hyper::{
     Request,
 };
 
+use simd_json::serde::from_str;
+use serde_json::{
+    json,
+    Value,
+    Value::Null,
+};
+
+use crate::types::Transaction;
+
 #[macro_export]
 macro_rules! accept {
     (
         $io:expr,
+        $mempool:expr
     ) => {
         // Bind the incoming connection to our service
         if let Err(err) = http1::Builder::new()
@@ -18,6 +33,7 @@ macro_rules! accept {
                 service_fn(|req| {
                     let response = accept_request(
                         req,
+                        $mempool.clone(),
                     );
                     response
                 }),
@@ -29,14 +45,54 @@ macro_rules! accept {
     };
 }
 
-pub async fn accept_request(
-    tx: Request<hyper::body::Incoming>,
-) -> Result<hyper::Response<Full<Bytes>>, Infallible> {
-    // Send request and measure time
-    let response: Result<hyper::Response<Full<Bytes>>, Infallible>;
+async fn incoming_to_value(tx: Request<Incoming>) -> Result<Value, hyper::Error> {
+    #[cfg(feature = "debug-verbose")]
+    println!("Incoming request: {:?}", tx);
 
+    let tx = tx.collect().await?.to_bytes().clone();
+    let mut tx = from_utf8(&tx).unwrap().to_owned();
 
+    let ret = match unsafe { from_str(&mut tx) } {
+        Ok(ret) => ret,
+        Err(_) => {
+            // Insane error handling
+            let ret = json!({
+                "id": Null,
+                "jsonrpc": "2.0",
+                "result": "Invalid JSON",
+            });
 
-    response
+            return Ok(ret);
+        }
+    };
+
+    Ok(ret)
 }
 
+pub async fn accept_request(
+    tx: Request<hyper::body::Incoming>,
+    mempool_tx: Arc<broadcast::Sender<Transaction>>,
+) -> Result<hyper::Response<Full<Bytes>>, Infallible> {
+    let tx = incoming_to_value(tx).await.unwrap();
+
+    // Put tx in a Transaction and send it to the mempool
+    let tx = Transaction::new(
+        tx["origin"].as_str().unwrap().parse::<Address>().unwrap(),
+        tx["to"].as_str().unwrap().parse::<Address>().unwrap(),
+        tx["value"].as_str().unwrap().parse::<U256>().unwrap(),
+        tx["basefee"].as_str().unwrap().parse::<U256>().unwrap(),
+        tx["max_basefee"].as_str().unwrap().parse::<U256>().unwrap(),
+        tx["max_priority"].as_str().unwrap().parse::<U256>().unwrap(),
+        tx["calldata"].as_str().unwrap().parse::<Vec<u8>>().unwrap(),
+        tx["signature"].as_str().unwrap().parse::<FixedBytes<65>>().unwrap(),
+    );
+
+    // Convert rx to bytes and but it in a Buf
+    let body = hyper::body::Bytes::from(tx.to_string());
+
+    // Put it in a http_body_util::Full
+    let body = Full::new(body);
+
+    //Build the response
+    Ok(hyper::Response::builder().status(200).body(body).unwrap())
+}

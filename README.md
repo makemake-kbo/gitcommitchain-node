@@ -1,3 +1,5 @@
 # GCC - git commit chain
 
-adioasdoiash
+this is dumb
+
+i am dumb
