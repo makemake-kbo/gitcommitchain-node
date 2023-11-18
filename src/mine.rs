@@ -15,7 +15,6 @@ fn mine_block(
     prev_hash: [u8; 32],
 ) -> Option<Block> {
     // set up block
-
     let mut new_block = Block::default();
 
     new_block.transactions = mempool.into();
