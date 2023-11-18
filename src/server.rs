@@ -1,3 +1,10 @@
+use std::convert::Infallible;
+use http_body_util::Full;
+use hyper::{
+    body::Bytes,
+    Request,
+};
+
 #[macro_export]
 macro_rules! accept {
     (
@@ -21,3 +28,15 @@ macro_rules! accept {
         }
     };
 }
+
+pub async fn accept_request(
+    tx: Request<hyper::body::Incoming>,
+) -> Result<hyper::Response<Full<Bytes>>, Infallible> {
+    // Send request and measure time
+    let response: Result<hyper::Response<Full<Bytes>>, Infallible>;
+
+
+
+    response
+}
+
