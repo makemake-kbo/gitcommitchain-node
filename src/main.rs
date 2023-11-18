@@ -2,12 +2,13 @@ mod mine;
 mod types;
 mod server;
 
+use std::net::SocketAddr;
 use sled::open;
 
 use git2::Repository;
 
 use tokio::net::TcpListener;
-use tokio::sync::watch;
+use tokio::sync::broadcast;
 
 use hyper::{
     server::conn::http1,
@@ -16,7 +17,7 @@ use hyper::{
 use hyper_util_blutgang::rt::TokioIo;
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Create/open new sled DB
     let db = open("db").unwrap();
 
@@ -26,6 +27,9 @@ async fn main() {
     // Initialize a git repo if its not there
     let repo = Repository::init("db").unwrap();
 
+
+    let listener = TcpListener::bind("127.0.0.1:3000".parse::<SocketAddr>().unwrap()).await?;
+    println!("\x1b[35mInfo:\x1b[0m Bound to: localhost:3000");
 
     loop {
         let (stream, socketaddr) = listener.accept().await?;
