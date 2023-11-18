@@ -3,6 +3,8 @@ mod mine;
 mod server;
 mod types;
 
+use alloy_primitives::address;
+use crate::mine::mine;
 use crate::{
     server::accept_request,
     types::Transaction,
@@ -41,6 +43,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let listener = TcpListener::bind("127.0.0.1:3000".parse::<SocketAddr>().unwrap()).await?;
     println!("\x1b[35mInfo:\x1b[0m Bound to: localhost:3000");
+
+
+    tokio::task::spawn(async move {
+        mine(mempool_rx, db_arc, address!("4073007498f7188f098902f7BCaF724Fd256Ad82"));
+    });
+
 
     loop {
         let (stream, socketaddr) = listener.accept().await?;

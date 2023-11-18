@@ -15,7 +15,7 @@ use blake3::hash;
 
 use sled::Db;
 
-fn mine_block(
+fn hash_block(
     mempool: Mempool,
     difficulty_target: u128,
     coinbase: Address,
@@ -42,7 +42,7 @@ fn mine_block(
     None
 }
 
-pub async fn mine(
+pub async fn mine_block(
     mut mempool_channel: Receiver<Mempool>,
     db: Arc<Db>,
     coinbase: Address,
@@ -57,7 +57,7 @@ pub async fn mine(
     // Perform mining until a valid block is found
     loop {
         // Attempt to mine a block
-        if let Some(block) = mine_block(
+        if let Some(block) = hash_block(
             mempool.clone(),
             u128::MAX - u16::MAX as u128,
             coinbase,
@@ -75,3 +75,21 @@ pub async fn mine(
         }
     }
 }
+
+pub async fn mine(
+    mempool_channel: Receiver<Mempool>,
+    db: Arc<Db>,
+    coinbase: Address,
+)-> Result<(), Box<dyn std::error::Error>> {
+    loop {
+        let a = mine_block(mempool_channel.resubscribe(), db.clone(), coinbase, [0; 32]).await;
+        if a.is_none() {
+            println!("lol go next");
+            continue;
+        }
+        let a = a.unwrap();
+
+        println!("Mined block!");
+    }
+}
+
