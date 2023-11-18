@@ -81,7 +81,7 @@ impl From<Mempool> for Vec<Transaction> {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Block {
     pub hash: [u8; 32],
     pub nonce: u64,

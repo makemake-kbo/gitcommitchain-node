@@ -1,12 +1,16 @@
+use crate::exec::execute_state_transition;
 use crate::types::{
     Block,
     Mempool,
 };
+use std::sync::Arc;
 
 use tokio::sync::broadcast::Receiver;
 
 use alloy_primitives::Address;
 use blake3::hash;
+
+use sled::Db;
 
 fn mine_block(
     mempool: Mempool,
@@ -35,6 +39,7 @@ fn mine_block(
 
 pub async fn mine(
     mut mempool_channel: Receiver<Mempool>,
+    db: Arc<Db>,
     difficulty_target: u128,
     coinbase: Address,
     prev_hash: [u8; 32],
@@ -49,6 +54,7 @@ pub async fn mine(
     loop {
         // Attempt to mine a block
         if let Some(block) = mine_block(mempool.clone(), difficulty_target, coinbase, prev_hash) {
+            let _ = execute_state_transition(db, block.clone());
             return Some(block);
         }
 
