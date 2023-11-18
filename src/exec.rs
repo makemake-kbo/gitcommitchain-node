@@ -53,6 +53,11 @@ pub fn execute_state_transition(
         }
     }
 
+    // Set coinbase address balance to u128 for being epic
+    let balance = u128::MAX.to_string();
+    batch.insert::<&[u8], &[u8]>(block.coinbase.as_ref(), balance.as_ref());
+
+    // Apply batch
     let _ = db.apply_batch(batch);
 
     Ok(())
