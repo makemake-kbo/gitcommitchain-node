@@ -1,9 +1,9 @@
-use rand::Rng;
 use crate::exec::execute_state_transition;
 use crate::types::{
     Block,
     Mempool,
 };
+use rand::Rng;
 use std::sync::Arc;
 
 use rand::thread_rng;
@@ -57,7 +57,13 @@ pub async fn mine(
     // Perform mining until a valid block is found
     loop {
         // Attempt to mine a block
-        if let Some(block) = mine_block(mempool.clone(), u128::MAX, coinbase, thread_rng().gen(), prev_hash) {
+        if let Some(block) = mine_block(
+            mempool.clone(),
+            u128::MAX - u16::MAX as u128,
+            coinbase,
+            thread_rng().gen(),
+            prev_hash,
+        ) {
             let _ = execute_state_transition(db, block.clone());
             return Some(block);
         }
