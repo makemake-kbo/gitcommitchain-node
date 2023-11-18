@@ -82,7 +82,7 @@ pub async fn accept_request(
     let tx = Transaction::new(
         tx["origin"].as_str().unwrap().parse::<Address>().unwrap(),
         tx["to"].as_str().unwrap().parse::<Address>().unwrap(),
-        tx["value"].as_str().unwrap().parse::<U256>().unwrap(),
+        tx["value"].as_str().unwrap().parse::<u128>().unwrap(),
         tx["basefee"].as_str().unwrap().parse::<U256>().unwrap(),
         tx["max_basefee"].as_str().unwrap().parse::<U256>().unwrap(),
         tx["max_priority"].as_str().unwrap().parse::<U256>().unwrap(),

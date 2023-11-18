@@ -13,7 +13,7 @@ use serde::{
 pub struct Transaction {
     pub origin: Address,
     pub to: Address,
-    pub value: U256,
+    pub value: u128,
     pub basefee: U256,
     pub max_basefee: U256,
     pub max_priority: U256,
@@ -25,7 +25,7 @@ impl Transaction {
     pub fn new(
         origin: Address,
         to: Address,
-        value: U256,
+        value: u128,
         basefee: U256,
         max_basefee: U256,
         max_priority: U256,
@@ -48,7 +48,7 @@ impl Transaction {
         Self {
             origin: address!("0000000000000000000000000000000000000000"),
             to: address!("0000000000000000000000000000000000000000"),
-            value: U256::from(0),
+            value: 0,
             basefee: U256::from(0),
             max_basefee: U256::from(0),
             max_priority: U256::from(0),
