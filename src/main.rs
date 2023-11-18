@@ -1,9 +1,7 @@
-mod types;
 mod mine;
+mod types;
 
-use sled::{
-    open,
-};
+use sled::open;
 
 use git2::Repository;
 
@@ -17,5 +15,4 @@ async fn main() {
     // Create/open new folder inside the current path
     // Initialize a git repo if its not there
     let repo = Repository::init("db").unwrap();
-
 }
