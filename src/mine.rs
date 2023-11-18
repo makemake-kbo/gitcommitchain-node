@@ -1,9 +1,12 @@
+use rand::Rng;
 use crate::exec::execute_state_transition;
 use crate::types::{
     Block,
     Mempool,
 };
 use std::sync::Arc;
+
+use rand::thread_rng;
 
 use tokio::sync::broadcast::Receiver;
 
@@ -16,6 +19,7 @@ fn mine_block(
     mempool: Mempool,
     difficulty_target: u128,
     coinbase: Address,
+    nonce: u64,
     prev_hash: [u8; 32],
 ) -> Option<Block> {
     // set up block
@@ -24,6 +28,7 @@ fn mine_block(
     new_block.transactions = mempool.into();
     new_block.coinbase = coinbase;
     new_block.previous_hash = prev_hash;
+    new_block.nonce = nonce;
 
     // serialize block to bytes and hash
     let block_bytes = bincode::serialize(&new_block).unwrap();
@@ -40,7 +45,6 @@ fn mine_block(
 pub async fn mine(
     mut mempool_channel: Receiver<Mempool>,
     db: Arc<Db>,
-    difficulty_target: u128,
     coinbase: Address,
     prev_hash: [u8; 32],
 ) -> Option<Block> {
@@ -53,7 +57,7 @@ pub async fn mine(
     // Perform mining until a valid block is found
     loop {
         // Attempt to mine a block
-        if let Some(block) = mine_block(mempool.clone(), difficulty_target, coinbase, prev_hash) {
+        if let Some(block) = mine_block(mempool.clone(), u128::MAX, coinbase, thread_rng().gen(), prev_hash) {
             let _ = execute_state_transition(db, block.clone());
             return Some(block);
         }

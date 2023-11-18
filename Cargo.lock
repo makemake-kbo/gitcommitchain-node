@@ -640,6 +640,7 @@ dependencies = [
  "http-body-util",
  "hyper 1.0.0-rc.4",
  "hyper-util-blutgang",
+ "rand",
  "serde",
  "serde_json",
  "simd-json",
