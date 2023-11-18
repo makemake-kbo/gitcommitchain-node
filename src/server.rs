@@ -1,3 +1,6 @@
+use alloy_primitives::Address;
+use alloy_primitives::U256;
+use alloy_primitives::FixedBytes;
 use std::sync::Arc;
 use http_body_util::BodyExt;
 use hyper::body::Incoming;
@@ -83,12 +86,14 @@ pub async fn accept_request(
         tx["basefee"].as_str().unwrap().parse::<U256>().unwrap(),
         tx["max_basefee"].as_str().unwrap().parse::<U256>().unwrap(),
         tx["max_priority"].as_str().unwrap().parse::<U256>().unwrap(),
-        tx["calldata"].as_str().unwrap().parse::<Vec<u8>>().unwrap(),
+        tx["calldata"].as_str().unwrap().as_bytes().to_vec(),
         tx["signature"].as_str().unwrap().parse::<FixedBytes<65>>().unwrap(),
     );
 
+    mempool_tx.send(tx).unwrap();
+
     // Convert rx to bytes and but it in a Buf
-    let body = hyper::body::Bytes::from(tx.to_string());
+    let body = hyper::body::Bytes::from("ok");
 
     // Put it in a http_body_util::Full
     let body = Full::new(body);
