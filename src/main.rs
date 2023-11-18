@@ -1,6 +1,7 @@
 mod mine;
 mod types;
 mod server;
+mod exec;
 
 use std::sync::Arc;
 use crate::{
