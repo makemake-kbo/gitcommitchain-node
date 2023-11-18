@@ -2,6 +2,7 @@ use crate::Mempool;
 use alloy_primitives::Address;
 use alloy_primitives::FixedBytes;
 use alloy_primitives::U256;
+
 use http_body_util::BodyExt;
 use http_body_util::Full;
 use hyper::body::Incoming;
@@ -13,7 +14,6 @@ use std::convert::Infallible;
 use std::str::from_utf8;
 use std::sync::Arc;
 use std::sync::RwLock;
-use tokio::sync::broadcast;
 
 use serde_json::{
     json,
