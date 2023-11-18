@@ -15,7 +15,7 @@ pub fn execute_state_transition(
     // loop over transactions in DB and update balances
     for tx in block.transactions {
         // Check sender balance
-        let res = if db.get(tx.origin).unwrap() == None {
+        let res = if db.get(tx.origin).unwrap().is_none() {
             return Err("Invalid state transition!".into());
         } else {
             db.get(tx.origin).unwrap().unwrap()
@@ -35,7 +35,7 @@ pub fn execute_state_transition(
         batch.insert::<&[u8], &[u8]>(tx.origin.as_ref(), balance.as_ref());
 
         // get balance of the receiver
-        let res = if db.get(tx.to).unwrap() == None {
+        let res = if db.get(tx.to).unwrap().is_none() {
             return Err("Invalid state transition!".into());
         } else {
             db.get(tx.to).unwrap()
@@ -47,7 +47,7 @@ pub fn execute_state_transition(
             let res = res.unwrap();
             let res = std::str::from_utf8(&res).unwrap();
             let mut res = res.parse::<u128>().unwrap();
-            res = res + tx.value;
+            res += tx.value;
 
             batch.insert::<&[u8], &[u8]>(tx.origin.as_ref(), res.to_string().as_ref());
         }

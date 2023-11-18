@@ -33,7 +33,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     //
     // Create/open new folder inside the current path
     // Initialize a git repo if its not there
-    let repo = Repository::init("db").unwrap();
+    let _repo = Repository::init("db").unwrap();
 
     // create mempool channel
     let (mempool_tx, mempool_rx) = broadcast::channel::<Transaction>(1024);
