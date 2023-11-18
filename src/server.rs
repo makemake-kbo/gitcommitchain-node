@@ -1,24 +1,24 @@
 use alloy_primitives::Address;
-use alloy_primitives::U256;
 use alloy_primitives::FixedBytes;
-use std::sync::Arc;
+use alloy_primitives::U256;
 use http_body_util::BodyExt;
-use hyper::body::Incoming;
-use std::str::from_utf8;
-use tokio::sync::broadcast;
-use std::convert::Infallible;
 use http_body_util::Full;
+use hyper::body::Incoming;
 use hyper::{
     body::Bytes,
     Request,
 };
+use std::convert::Infallible;
+use std::str::from_utf8;
+use std::sync::Arc;
+use tokio::sync::broadcast;
 
-use simd_json::serde::from_str;
 use serde_json::{
     json,
     Value,
     Value::Null,
 };
+use simd_json::serde::from_str;
 
 use crate::types::Transaction;
 
@@ -34,10 +34,7 @@ macro_rules! accept {
             .serve_connection(
                 $io,
                 service_fn(|req| {
-                    let response = accept_request(
-                        req,
-                        $mempool.clone(),
-                    );
+                    let response = accept_request(req, $mempool.clone());
                     response
                 }),
             )
@@ -85,9 +82,17 @@ pub async fn accept_request(
         tx["value"].as_str().unwrap().parse::<u128>().unwrap(),
         tx["basefee"].as_str().unwrap().parse::<U256>().unwrap(),
         tx["max_basefee"].as_str().unwrap().parse::<U256>().unwrap(),
-        tx["max_priority"].as_str().unwrap().parse::<U256>().unwrap(),
+        tx["max_priority"]
+            .as_str()
+            .unwrap()
+            .parse::<U256>()
+            .unwrap(),
         tx["calldata"].as_str().unwrap().as_bytes().to_vec(),
-        tx["signature"].as_str().unwrap().parse::<FixedBytes<65>>().unwrap(),
+        tx["signature"]
+            .as_str()
+            .unwrap()
+            .parse::<FixedBytes<65>>()
+            .unwrap(),
     );
 
     mempool_tx.send(tx).unwrap();

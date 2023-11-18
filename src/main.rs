@@ -1,16 +1,16 @@
-mod mine;
-mod types;
-mod server;
 mod exec;
+mod mine;
+mod server;
+mod types;
 
-use std::sync::Arc;
 use crate::{
-    types::Transaction,
     server::accept_request,
+    types::Transaction,
 };
+use std::sync::Arc;
 
-use std::net::SocketAddr;
 use sled::open;
+use std::net::SocketAddr;
 
 use git2::Repository;
 
@@ -35,7 +35,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Initialize a git repo if its not there
     let repo = Repository::init("db").unwrap();
 
-
     // create mempool channel
     let (mempool_tx, mempool_rx) = broadcast::channel::<Transaction>(1024);
     let mempool_tx_arc = Arc::new(mempool_tx);
@@ -55,10 +54,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         // Spawn a tokio task to serve multiple connections concurrently
         tokio::task::spawn(async move {
-            accept!(
-                io,
-                mempool_clone
-            );
+            accept!(io, mempool_clone);
         });
     }
 }
