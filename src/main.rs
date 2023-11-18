@@ -3,13 +3,12 @@ mod mine;
 mod server;
 mod types;
 
-use alloy_primitives::address;
 use crate::mine::mine;
-use crate::{
-    server::accept_request,
-    types::Transaction,
-};
+use crate::server::accept_request;
+use crate::types::Mempool;
+use alloy_primitives::address;
 use std::sync::Arc;
+use std::sync::RwLock;
 
 use sled::open;
 use std::net::SocketAddr;
@@ -17,7 +16,6 @@ use std::net::SocketAddr;
 use git2::Repository;
 
 use tokio::net::TcpListener;
-use tokio::sync::broadcast;
 
 use hyper::{
     server::conn::http1,
@@ -37,17 +35,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Initialize a git repo if its not there
     let _repo = Repository::init("db").unwrap();
 
-    // create mempool channel
-    let (mempool_tx, mempool_rx) = broadcast::channel::<Transaction>(1024);
-    let mempool_tx_arc = Arc::new(mempool_tx);
+    let mempool = Arc::new(RwLock::new(Mempool::default()));
 
     let listener = TcpListener::bind("127.0.0.1:3000".parse::<SocketAddr>().unwrap()).await?;
     println!("\x1b[35mInfo:\x1b[0m Bound to: localhost:3000");
 
-    tokio::task::spawn(async move {
-        mine(mempool_rx, db_arc, address!("4073007498f7188f098902f7BCaF724Fd256Ad82"));
-    });
+    let mempool_miner = Arc::clone(&mempool);
 
+    tokio::task::spawn(async move {
+        let _ = mine(
+            mempool_miner,
+            db_arc,
+            address!("4073007498f7188f098902f7BCaF724Fd256Ad82"),
+        )
+        .await;
+    });
 
     loop {
         let (stream, socketaddr) = listener.accept().await?;
@@ -57,7 +59,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         // `hyper::rt` IO traits.
         let io = TokioIo::new(stream);
 
-        let mempool_clone = Arc::clone(&mempool_tx_arc);
+        let mempool_clone = Arc::clone(&mempool);
 
         // Spawn a tokio task to serve multiple connections concurrently
         tokio::task::spawn(async move {

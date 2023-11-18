@@ -5,10 +5,9 @@ use crate::types::{
 };
 use rand::Rng;
 use std::sync::Arc;
+use std::sync::RwLock;
 
 use rand::thread_rng;
-
-use tokio::sync::broadcast::Receiver;
 
 use alloy_primitives::Address;
 use blake3::hash;
@@ -43,53 +42,42 @@ fn hash_block(
 }
 
 pub async fn mine_block(
-    mut mempool_channel: Receiver<Mempool>,
+    mempool: Arc<RwLock<Mempool>>,
     db: Arc<Db>,
     coinbase: Address,
     prev_hash: [u8; 32],
 ) -> Option<Block> {
-    // Receive mempool updates through the channel
-    let mut mempool = match mempool_channel.recv().await {
-        Ok(mempool) => mempool,
-        Err(_) => return None, // Handle the error as needed
-    };
-
     // Perform mining until a valid block is found
     loop {
         // Attempt to mine a block
         if let Some(block) = hash_block(
-            mempool.clone(),
+            mempool.read().unwrap().clone(),
             u128::MAX - u16::MAX as u128,
             coinbase,
             thread_rng().gen(),
             prev_hash,
         ) {
             let _ = execute_state_transition(db, block.clone());
+            // clear mempool
+            mempool.write().unwrap().transactions.clear();
             return Some(block);
-        }
-
-        // If mining is unsuccessful, update mempool with the latest transactions
-        match mempool_channel.recv().await {
-            Ok(new_mempool) => mempool = new_mempool,
-            Err(_) => return None, // Handle the error as needed
         }
     }
 }
 
 pub async fn mine(
-    mempool_channel: Receiver<Mempool>,
+    mempool: Arc<RwLock<Mempool>>,
     db: Arc<Db>,
     coinbase: Address,
-)-> Result<(), Box<dyn std::error::Error>> {
+) -> Result<(), Box<dyn std::error::Error>> {
     loop {
-        let a = mine_block(mempool_channel.resubscribe(), db.clone(), coinbase, [0; 32]).await;
+        let a = mine_block(mempool.clone(), db.clone(), coinbase, [0; 32]).await;
         if a.is_none() {
             println!("lol go next");
             continue;
         }
-        let a = a.unwrap();
+        // let a = a.unwrap();
 
         println!("Mined block!");
     }
 }
-

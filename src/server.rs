@@ -1,3 +1,4 @@
+use crate::Mempool;
 use alloy_primitives::Address;
 use alloy_primitives::FixedBytes;
 use alloy_primitives::U256;
@@ -11,6 +12,7 @@ use hyper::{
 use std::convert::Infallible;
 use std::str::from_utf8;
 use std::sync::Arc;
+use std::sync::RwLock;
 use tokio::sync::broadcast;
 
 use serde_json::{
@@ -71,7 +73,7 @@ async fn incoming_to_value(tx: Request<Incoming>) -> Result<Value, hyper::Error>
 
 pub async fn accept_request(
     tx: Request<hyper::body::Incoming>,
-    mempool_tx: Arc<broadcast::Sender<Transaction>>,
+    mempool: Arc<RwLock<Mempool>>,
 ) -> Result<hyper::Response<Full<Bytes>>, Infallible> {
     let tx = incoming_to_value(tx).await.unwrap();
 
@@ -95,7 +97,8 @@ pub async fn accept_request(
             .unwrap(),
     );
 
-    mempool_tx.send(tx).unwrap();
+    // Send to mempool
+    mempool.write().unwrap().transactions.push(tx);
 
     // Convert rx to bytes and but it in a Buf
     let body = hyper::body::Bytes::from("ok");
